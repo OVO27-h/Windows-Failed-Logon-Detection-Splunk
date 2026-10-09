@@ -39,17 +39,17 @@ This hands-on SOC lab demonstrates the investigation of repeated Windows authent
 **Analyst assessment:** In a real SOC, failures followed by success would warrant investigation for possible credential guessing. Here, the events were intentionally generated. The loopback address `127.0.0.1` indicates a local source, not a remote attacker. The alert demonstrates detection of the configured pattern; it does not establish malicious intent.
 
 ## Detection logic
-The tested SPL search is stored in [`detection/failed-logon-detection.spl`](detection/failed-logon-detection.spl).
+The tested SPL search is stored in [`Detection/failed-logon-detection.spl`](Detection/failed-logon-detection.spl).
 
 The search filters for Event ID 4625, groups records by account and computer in **fixed five-minute buckets**, counts failures, excludes machine accounts ending in `$`, and returns relevant triage fields. The fixed buckets are **not a sliding five-minute window**; activity split across a bucket boundary may not reach the threshold in either bucket.
 
 ## Evidence
-- [Initial failed-logon summary](screenshots/01-failed-logon-summary.png)
-- [Refined detection search](screenshots/05-splunk-refined-brute-force-detection-search.png)
-- [Triggered alert](screenshots/08-splunk-triggered-failed-logon-alert.png)
-- [Alert search results](screenshots/09-splunk-triggered-alert-results.png)
+- [Initial failed-logon summary](Screenshots/01-failed-logon-summary.png)
+- [Refined detection search](Screenshots/05-splunk-refined-brute-force-detection-search.png)
+- [Triggered alert](Screenshots/08-splunk-triggered-failed-logon-alert.png)
+- [Alert search results](Screenshots/09-splunk-triggered-alert-results.png)
 
-Additional evidence and detailed observations are recorded in [`documentation/investigation-findings.txt`](documentation/investigation-findings.txt) and the [`SOC investigation report`](documentation/incident-report.md).
+Additional evidence and detailed observations are recorded in [`Documentation/investigation-findings.txt`](Documentation/investigation-findings.txt) and the [`SOC investigation report`](Documentation/incident-report.md).
 
 > **Repository check:** Ensure your uploaded screenshots and findings file use these exact names, or update the links to match your filenames.
 
