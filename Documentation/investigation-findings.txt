@@ -1,0 +1,165 @@
+Project: Windows Failed Logon / Brute-Force Investigation
+Date: 07 October 2026
+
+DATA SOURCE
+Windows Security Event Logs
+
+SIEM
+Splunk Enterprise
+
+INITIAL DETECTION
+Event ID: 4625
+Description: Failed Windows logon
+
+FINDING 1 – Failed Login Frequency
+Failed attempts: 5
+First failure: 13:15:32.436
+Last failure: 13:15:46.403
+Duration: ~14 seconds
+
+Evidence:
+Screenshot saved: 01-failed-logon-summary.png
+
+
+
+FINDING 2 – Failed Authentication Details
+
+Target account: DELL
+Event ID: 4625
+Logon Type: 2 (Interactive)
+Failure Reason: Unknown user name or bad password
+Status: 0xC000006D
+Sub Status: 0xC000006A
+Source Network Address: 127.0.0.1
+Workstation: DESKTOP-PD8H8GJ
+Logon Process: User32
+Authentication Package: Negotiate
+
+Analysis:
+The failed authentication attempts targeted the local DELL account.
+Sub Status 0xC000006A indicates that the account was valid but an
+incorrect password was supplied. Logon Type 2 indicates an interactive
+logon. The source address 127.0.0.1 indicates that the authentication
+attempts originated locally from the endpoint rather than from a
+remote system.
+
+FINDING 3 – Successful Authentication Following Failed Attempts
+
+Five Event ID 4625 failed authentication events occurred between
+13:15:32 and 13:15:46.
+
+A successful Event ID 4624 authentication for the DELL account
+occurred at approximately 13:15:50.
+
+The successful authentication shared the following characteristics
+with the preceding failures:
+
+Account: DELL
+Logon Type: 2
+Source Network Address: 127.0.0.1
+Host: DESKTOP-PD8H8GJ
+
+Analysis:
+The five failed authentication attempts were followed approximately
+four seconds later by a successful interactive authentication for the
+same account and originating from the same local endpoint.
+
+In a real SOC investigation, this pattern would warrant further
+investigation because repeated authentication failures followed by a
+successful logon can indicate successful credential guessing.
+However, additional context is required before determining whether
+the activity represents malicious behavior.
+
+FINDING 4 – Successful Authentication Validation
+
+Event ID: 4624
+Time: 13:15:50.765
+Account: DELL
+Logon Type: 2 (Interactive)
+Source Network Address: 127.0.0.1
+Authentication Package: Negotiate
+Logon Process: User32
+Host: DESKTOP-PD8H8GJ
+
+Analysis:
+The successful authentication occurred approximately four seconds
+after the final failed authentication attempt.
+
+The successful event shares the same account, logon type, source
+address, authentication package, logon process, and endpoint context
+as the preceding failed authentication events.
+
+This strongly correlates the successful authentication with the
+preceding sequence of failed attempts.
+
+FINDING 5 – Failed Logon Detection Search
+
+Event ID: 4625
+Account: DELL
+Failed Attempts: 5
+First Failed Attempt: 13:15:32.436
+Last Failed Attempt: 13:15:46.403
+Duration: Approximately 14 seconds
+Logon Type: 2 (Interactive)
+Source Network Address: 127.0.0.1
+Host: DESKTOP-PD8H8GJ
+
+Analysis:
+A Splunk detection search was created to identify accounts generating
+five or more failed authentication attempts within a five-minute period.
+
+The search identified five failed authentication attempts against the
+DELL account between 13:15:32.436 and 13:15:46.403, occurring within
+approximately 14 seconds.
+
+All identified attempts originated from 127.0.0.1 and used Logon Type 2,
+indicating interactive authentication attempts originating from the
+local endpoint.
+
+Machine accounts ending in "$" were excluded from the search results
+to remove duplicate machine-account entries.
+
+The concentrated sequence of five authentication failures within
+approximately 14 seconds demonstrates the type of activity that could
+be detected using a threshold-based authentication monitoring rule.
+
+Evidence:
+05-splunk-refined-brute-force-detection-search.png
+
+FINDING 6 – Detection Alert Validation
+
+Event ID: 4625
+Account: DELL
+Failed Attempts: 6
+First Failed Attempt: 16:20:33.838
+Last Failed Attempt: 16:20:46.114
+Duration: Approximately 12 seconds
+Logon Type: 2 (Interactive)
+Source Network Address: 127.0.0.1
+Host: DESKTOP-PD8H8GJ
+Detection Threshold: 5 or more failed logon attempts within 5 minutes
+Alert Severity: Medium
+
+Analysis:
+The previously developed failed-logon detection search was configured
+as a scheduled Splunk alert and tested using a new controlled sequence
+of failed Windows authentication attempts.
+
+Six failed authentication attempts were generated against the DELL
+account between 16:20:33.838 and 16:20:46.114, occurring within
+approximately 12 seconds.
+
+The activity exceeded the configured detection threshold of five failed
+authentication attempts within a five-minute period.
+
+During the scheduled execution at approximately 16:25, Splunk
+successfully identified the activity and generated the
+"Repeated Failed Logon Attempts – Windows" alert.
+
+The successful alert demonstrates that the detection logic functions
+as intended and validates the end-to-end workflow from Windows event
+generation and Splunk ingestion through detection and alert generation.
+
+Evidence:
+08-splunk-triggered-failed-logon-alert.png
+09-splunk-triggered-alert-results.png

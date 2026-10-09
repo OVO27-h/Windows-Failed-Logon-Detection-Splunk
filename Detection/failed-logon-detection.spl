@@ -1,0 +1,8 @@
+index=main sourcetype="WinEventLog:Security" EventCode=4625
+| eval Original_Time=_time
+| bin _time span=5m
+| stats count AS Failed_Attempts earliest(Original_Time) AS First_Failure latest(Original_Time) AS Last_Failure values(Source_Network_Address) AS Source_IP values(Logon_Type) AS Logon_Type by _time Account_Name ComputerName
+| where Failed_Attempts >= 5
+| where NOT like(Account_Name, "%$")
+| convert ctime(First_Failure) ctime(Last_Failure)
+| table Account_Name Failed_Attempts First_Failure Last_Failure Source_IP Logon_Type ComputerName
